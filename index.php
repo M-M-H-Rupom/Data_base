@@ -17,7 +17,7 @@ function dbdelta_callback(){
     )" ;
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
     dbDelta( $sql );
-    $wpdb->insert($table_name,[
+    $wpdb->insert($table_name,[ 
         'p_name' => 'rupom',
         'email' => 'rupom@gmail.com'
     ]);
@@ -33,9 +33,17 @@ add_action( 'admin_menu',function(){
     add_menu_page("Database_demo", "Database_demo", 'manage_options', 'database_demo', 'menu_details_callback');
 });
 function menu_details_callback(){
+    if(isset($_GET['id'])){
+        if(!isset($_GET['url']) || !wp_verify_nonce($_GET['url'], 'dbdemo_url')){
+            echo 'sorry you are not author';
+        }
+    }
     global $wpdb;
     $table_name = $wpdb->prefix.'persons';
     $id = $_GET['id'] ?? 0;
+    if(isset($_GET['action']) && $_GET['action'] == 'delete'){
+        $wpdb->delete($table_name,['id'=> $_GET['id']]);
+    }
     if($id){
         $result = $wpdb->get_row("SELECT * FROM {$table_name} WHERE id='{$id}' ");
         if($result){
@@ -46,7 +54,7 @@ function menu_details_callback(){
     ?>
     <form action="" method="POST">
         <?php 
-        wp_nonce_field('dbname', 'nonce',);
+        wp_nonce_field('dbname', 'nonce');
         ?>
         <input type="text" name="name" id="" value="<?php echo $result->p_name ?>">
         <input type="text" name="email" id="" value="<?php echo $result->email ?>">
@@ -62,7 +70,7 @@ function menu_details_callback(){
     <div class="db_content">
         <?php
         global $wpdb;
-        $db_users = $wpdb->get_results("SELECT id, p_name, email FROM {$table_name}", ARRAY_A);
+        $db_users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
         $dbtable = new dbuser_data($db_users);
         $dbtable->prepare_items();
         $dbtable->display();
@@ -70,8 +78,6 @@ function menu_details_callback(){
         ?>
     </div>
     <?php
-
-
     if(isset($_POST['submit'])){
         $nonce = $_POST['nonce'];
         if(wp_verify_nonce($nonce,'dbname')){

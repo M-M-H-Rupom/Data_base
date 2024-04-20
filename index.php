@@ -5,6 +5,7 @@
  * Description: Plugin description
  * Version: 1.0
  */
+require_once('class_table_list.php');
 function dbdelta_callback(){
     global $wpdb;
     $table_name = $wpdb->prefix.'persons';
@@ -58,7 +59,19 @@ function menu_details_callback(){
         }
         ?>
     </form>
+    <div class="db_content">
+        <?php
+        global $wpdb;
+        $db_users = $wpdb->get_results("SELECT id, p_name, email FROM {$table_name}", ARRAY_A);
+        $dbtable = new dbuser_data($db_users);
+        $dbtable->prepare_items();
+        $dbtable->display();
+        print_r($db_users);
+        ?>
+    </div>
     <?php
+
+
     if(isset($_POST['submit'])){
         $nonce = $_POST['nonce'];
         if(wp_verify_nonce($nonce,'dbname')){
@@ -77,4 +90,4 @@ function menu_details_callback(){
     }
 }
 
-?> <button > edit </button>
+?> 
